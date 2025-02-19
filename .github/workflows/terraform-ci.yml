@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to latest version
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload Terraform Debug Logs on Failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Updated to latest version
         with:
           name: terraform-debug-logs
           path: .terraform*
