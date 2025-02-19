@@ -1,6 +1,7 @@
 # tf-aws-infra
 
 ## Assignment 3
+
 ### AWS CLI Installation and Configuration (Windows)
 1. Install AWS CLI
 Download & Install:
@@ -37,3 +38,35 @@ If successful, it returns IAM user details.
 Never use Admin access for CLI users.
 Keep credentials secure (avoid hardcoding).
 Use IAM roles when possible.
+
+
+### Terraform CI/CD Setup
+
+This repository automates AWS networking infrastructure setup using Terraform and enforces CI/CD via GitHub Actions
+
+## Setup Instructions
+1. Pre-requisites
+Terraform v1.10.5+
+AWS CLI (Configured with dev and demo profiles)
+GitHub CLI (Optional)
+
+## 2. Clone, Initialize, Deploy and Destroy Infrastructure
+terraform init
+terraform plan -var="aws_profile=dev"
+terraform apply -var="aws_profile=dev"
+terraform destroy -var="aws_profile=dev"
+
+## CI/CD Workflow
+
+The GitHub Actions pipeline runs on pull requests to main and performs:
+Terraform Format Check (terraform fmt)
+Terraform Validation (terraform validate)
+Blocks merging if validation fails
+Uploads logs on failure
+
+## Troubleshooting
+CI failures? Check logs in GitHub Actions
+Terraform issues? Run locally
+
+terraform fmt -recursive
+terraform validate
