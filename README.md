@@ -1,7 +1,6 @@
 # tf-aws-infra
 
 ## Assignment 3
-
 ### AWS CLI Installation and Configuration (Windows)
 1. Install AWS CLI
 Download & Install:
