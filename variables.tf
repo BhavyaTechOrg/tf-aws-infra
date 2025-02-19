@@ -1,12 +1,12 @@
 variable "aws_region" {
   type        = string
-  default     = "us-east-1" # Closest to you
+  default     = "us-west-1" # Modify as needed
   description = "AWS region"
 }
 
 variable "aws_profile" {
   type        = string
-  default     = "dev" # Your 'dev' profile
+  default     = "dev"
   description = "AWS CLI profile for authentication"
 }
 
@@ -20,12 +20,6 @@ variable "vpc_cidr" {
   type        = string
   default     = "10.0.0.0/16"
   description = "CIDR block for the VPC"
-}
-
-variable "availability_zones" {
-  type        = list(string)
-  default     = ["us-east-1a", "us-east-1b", "us-east-1c"] # Modify for your region
-  description = "List of Availability Zones"
 }
 
 variable "public_subnets_cidr" {
