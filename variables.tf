@@ -1,6 +1,6 @@
 variable "aws_region" {
   type        = string
-  default     = "us-west-1" # Modify as needed
+  default     = "us-east-1" # Modify as needed
   description = "AWS region"
 }
 
