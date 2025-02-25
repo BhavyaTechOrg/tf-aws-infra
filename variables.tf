@@ -32,3 +32,13 @@ variable "name_prefix" {
   type        = string
   description = "A prefix to uniquely identify resources"
 }
+
+variable "custom_ami" {
+  type        = string
+  description = "AMI ID of the custom-built application image"
+}
+
+variable "application_port" {
+  type        = number
+  description = "Port on which the application runs"
+}
