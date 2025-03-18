@@ -42,3 +42,19 @@ variable "application_port" {
   type        = number
   description = "Port on which the application runs"
 }
+
+variable "db_username" {
+  type        = string
+  description = "Database username"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Database password"
+  sensitive   = true
+}
+
+variable "db_name" {
+  type        = string
+  description = "Database name"
+}
