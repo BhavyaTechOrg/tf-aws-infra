@@ -1,8 +1,8 @@
 resource "random_uuid" "bucket_name" {}
 
 resource "aws_s3_bucket" "webapp_s3" {
-  bucket = "webapp-${random_uuid.bucket_name.result}"
-  force_destroy = true 
+  bucket        = "webapp-${random_uuid.bucket_name.result}"
+  force_destroy = true
 
   lifecycle {
     prevent_destroy = false

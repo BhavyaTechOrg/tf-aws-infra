@@ -1,10 +1,10 @@
 resource "aws_instance" "application_instance" {
-  ami                         = var.custom_ami  # Custom AMI built with Packer
+  ami                         = var.custom_ami # Custom AMI built with Packer
   instance_type               = "t2.micro"
-  subnet_id                   = element(aws_subnet.public[*].id, 0)  # Using public subnet
+  subnet_id                   = element(aws_subnet.public[*].id, 0) # Using public subnet
   vpc_security_group_ids      = [aws_security_group.application_security_group.id]
-  associate_public_ip_address = true  # Required for internet access
-  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name  # Ensure IAM Profile is correct
+  associate_public_ip_address = true                                      # Required for internet access
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name # Ensure IAM Profile is correct
 
   root_block_device {
     volume_size           = 25
