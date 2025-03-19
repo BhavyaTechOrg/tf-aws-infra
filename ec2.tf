@@ -14,53 +14,6 @@ resource "aws_instance" "application_instance" {
 
   disable_api_termination = false
 
-  # # User Data script - Runs on instance launch
-  # user_data = <<-EOF
-  #   #!/bin/bash
-  #   set -e  # Exit on error
-  #   exec > /var/log/user-data.log 2>&1  # Log output for debugging
-
-  #   echo "Starting EC2 user data script..."
-
-  #   # Install dependencies
-  #   echo "Installing dependencies..."
-  #   sudo apt-get update -y
-  #   sudo apt-get install -y jq unzip awscli
-
-  #   # Fetch database credentials from AWS Secrets Manager
-  #   echo "Fetching database credentials..."
-  #   DB_SECRET=$(aws secretsmanager get-secret-value --secret-id db/credentials --query SecretString --output text || echo "ERROR")
-
-  #   if [[ "$DB_SECRET" == "ERROR" ]]; then
-  #     echo "Failed to fetch DB credentials. Exiting..."
-  #     exit 1
-  #   fi
-
-  #   # Extract credentials using jq
-  #   POSTGRESQL_USER=$(echo "$DB_SECRET" | jq -r '.username')
-  #   POSTGRESQL_PASSWORD=$(echo "$DB_SECRET" | jq -r '.password')
-  #   POSTGRESQL_DB=$(echo "$DB_SECRET" | jq -r '.db_name')
-
-  #   # Validate credentials
-  #   if [[ -z "$POSTGRESQL_USER" || -z "$POSTGRESQL_PASSWORD" || -z "$POSTGRESQL_DB" ]]; then
-  #     echo "Missing required DB credentials. Exiting..."
-  #     exit 1
-  #   fi
-
-  #   # Write environment variables securely
-  #   echo "Setting environment variables..."
-  #   echo "POSTGRESQL_HOST=${aws_db_instance.webapp_db.endpoint}" | sudo tee -a /etc/environment
-  #   echo "POSTGRESQL_USER=$POSTGRESQL_USER" | sudo tee -a /etc/environment
-  #   echo "POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD" | sudo tee -a /etc/environment
-  #   echo "POSTGRESQL_DB=$POSTGRESQL_DB" | sudo tee -a /etc/environment
-
-  #   # Restart application service
-  #   echo "Restarting web application service..."
-  #   sudo systemctl restart webapp.service || echo "Service restart failed!"
-
-  #   echo "User data script completed successfully!"
-  # EOF
-
   user_data = <<-EOF
 #!/bin/bash
 set -e
@@ -68,13 +21,22 @@ exec > /var/log/user-data.log 2>&1
 
 echo "Starting EC2 user data script..."
 
-# Create environment file specifically for the webapp service
+# Export environment variables and then create the environment file for the webapp service
+export POSTGRESQL_HOST=${aws_db_instance.webapp_db.address}
+export POSTGRESQL_PORT=5432
+export POSTGRESQL_USER=${jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]}
+export POSTGRESQL_PASSWORD=${jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]}
+export POSTGRESQL_DB=${var.db_name}
+export S3_BUCKET_NAME="webapp-${random_uuid.bucket_name.result}"
+
+# Use $$ to escape the $ when you're creating the environment file
 cat > /tmp/webapp.env << EOL
-POSTGRESQL_HOST=${aws_db_instance.webapp_db.address}
-POSTGRESQL_PORT=5432
-POSTGRESQL_USER=${jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]}
-POSTGRESQL_PASSWORD=${jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]}
-POSTGRESQL_DB=${var.db_name}
+POSTGRESQL_HOST=$${POSTGRESQL_HOST}
+POSTGRESQL_PORT=$${POSTGRESQL_PORT}
+POSTGRESQL_USER=$${POSTGRESQL_USER}
+POSTGRESQL_PASSWORD=$${POSTGRESQL_PASSWORD}
+POSTGRESQL_DB=$${POSTGRESQL_DB}
+S3_BUCKET_NAME=$${S3_BUCKET_NAME}
 EOL
 
 # Move file to correct location with appropriate permissions
@@ -86,7 +48,7 @@ sudo chown csye6225:csye6225 /etc/webapp.env
 sudo sed -i 's/Environment="POSTGRESQL_DB=.*"//' /etc/systemd/system/webapp.service
 sudo sed -i 's/Environment="POSTGRESQL_USER=.*"//' /etc/systemd/system/webapp.service
 sudo sed -i 's/Environment="POSTGRESQL_PASSWORD=.*"//' /etc/systemd/system/webapp.service
-sudo sed -i '/\[Service\]/a EnvironmentFile=/etc/webapp.env' /etc/systemd/system/webapp.service
+sudo sed -i '/\\[Service\\]/a EnvironmentFile=/etc/webapp.env' /etc/systemd/system/webapp.service
 
 # Reload systemd daemon and restart service
 sudo systemctl daemon-reload
@@ -94,6 +56,7 @@ sudo systemctl restart webapp.service
 
 echo "User data script completed successfully!"
 EOF
+
   tags = {
     Name        = "${var.name_prefix}-application-instance"
     Environment = var.environment

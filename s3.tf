@@ -1,6 +1,8 @@
+resource "random_uuid" "bucket_name" {}
+
 resource "aws_s3_bucket" "webapp_s3" {
-  bucket        = "${var.name_prefix}-webapp-${random_id.vpc_id.hex}"
-  force_destroy = true # Allows Terraform to delete non-empty bucket
+  bucket        = "webapp-${random_uuid.bucket_name.result}"
+  force_destroy = true
 
   lifecycle {
     prevent_destroy = false
