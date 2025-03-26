@@ -53,54 +53,16 @@ resource "aws_iam_policy" "s3_secrets_policy" {
   }
 }
 
-# IAM Policy for CloudWatch Logs and Metrics
-resource "aws_iam_policy" "cloudwatch_policy" {
-  name        = "CloudWatchFullAccessPolicy-${random_id.policy_suffix.hex}"
-  description = "Policy for CloudWatch Logs and Metrics Access"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "cloudwatch:PutMetricData",
-          "cloudwatch:GetMetricData",
-          "cloudwatch:ListMetrics",
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogStreams",
-          "logs:DescribeLogGroups"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "ssm:GetParameter",
-          "ssm:PutParameter"
-        ],
-        Resource = "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
-      }
-    ]
-  })
-
-  tags = {
-    Name        = "CloudWatch Logs and Metrics Access"
-    Environment = "Production"
-  }
-}
-
 # Attach IAM Policies to IAM Role
 resource "aws_iam_role_policy_attachment" "attach_s3_secrets_policy" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = aws_iam_policy.s3_secrets_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "cloudwatch_policy_attachment" {
+# Attach AWS managed CloudWatchAgentServerPolicy
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy_attachment" {
   role       = aws_iam_role.ec2_role.name
-  policy_arn = aws_iam_policy.cloudwatch_policy.arn
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
 # Random ID for unique policy names
