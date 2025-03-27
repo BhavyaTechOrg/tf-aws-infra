@@ -1,6 +1,11 @@
+# Random ID for unique resource names
+resource "random_id" "resource_suffix" {
+  byte_length = 4
+}
+
 # IAM Role for EC2 Instance
 resource "aws_iam_role" "ec2_role" {
-  name = "ec2-role"
+  name = "ec2-role-${random_id.resource_suffix.hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -14,14 +19,14 @@ resource "aws_iam_role" "ec2_role" {
   })
 
   tags = {
-    Name        = "EC2 Instance Role"
+    Name        = "EC2 Instance Role-${random_id.resource_suffix.hex}"
     Environment = "Production"
   }
 }
 
 # IAM Policy for S3 and Secrets Manager Access
 resource "aws_iam_policy" "s3_secrets_policy" {
-  name        = "S3AndSecretsManagerPolicy-${random_id.policy_suffix.hex}"
+  name        = "S3AndSecretsManagerPolicy-${random_id.resource_suffix.hex}"
   description = "Allow EC2 to access S3 and Secrets Manager"
 
   policy = jsonencode({
@@ -48,7 +53,7 @@ resource "aws_iam_policy" "s3_secrets_policy" {
   })
 
   tags = {
-    Name        = "S3 and Secrets Manager Access"
+    Name        = "S3 and Secrets Manager Access-${random_id.resource_suffix.hex}"
     Environment = "Production"
   }
 }
@@ -65,18 +70,13 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
-# Random ID for unique policy names
-resource "random_id" "policy_suffix" {
-  byte_length = 4
-}
-
 # IAM Instance Profile for EC2
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "ec2-profile"
+  name = "ec2-profile-${random_id.resource_suffix.hex}"
   role = aws_iam_role.ec2_role.name
 
   tags = {
-    Name        = "EC2 Instance Profile"
+    Name        = "EC2 Instance Profile-${random_id.resource_suffix.hex}"
     Environment = "Production"
   }
 }
