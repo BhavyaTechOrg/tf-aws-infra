@@ -60,7 +60,8 @@ resource "aws_iam_policy" "s3_secrets_policy" {
           "secretsmanager:DescribeSecret",
           "secretsmanager:ListSecrets"
         ],
-        Resource = "arn:aws:secretsmanager:us-east-1:888577018328:secret:db/credentials-*"
+        Resource = "arn:aws:secretsmanager:us-east-1:888577018328:secret:db/credentials-lf6QwA"
+
       }
     ]
   })

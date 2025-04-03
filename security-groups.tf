@@ -69,7 +69,7 @@ resource "aws_security_group" "asg_app_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.ssh_allowed_ip]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -79,6 +79,8 @@ resource "aws_security_group" "asg_app_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+
 
   tags = {
     Name        = "asg-app-sg-${var.environment}-${random_pet.suffix.id}"
