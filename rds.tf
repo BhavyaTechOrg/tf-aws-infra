@@ -50,10 +50,11 @@ resource "aws_db_instance" "webapp_db" {
   password               = jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
   parameter_group_name   = aws_db_parameter_group.rds_param_group.name
   vpc_security_group_ids = [aws_security_group.database_security_group.id]
-  multi_az               = false
-  publicly_accessible    = false
-  skip_final_snapshot    = true
-  apply_immediately      = true
+
+  multi_az            = false
+  publicly_accessible = false
+  skip_final_snapshot = true
+  apply_immediately   = true
 
   # Ensures the RDS is placed in the correct subnets within the VPC
   db_subnet_group_name = aws_db_subnet_group.rds_subnet_group.name

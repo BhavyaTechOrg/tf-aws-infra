@@ -11,6 +11,10 @@ resource "aws_vpc" "main" {
     Name        = "${var.name_prefix}-vpc-${random_id.vpc_id.hex}"
     Environment = var.environment
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_internet_gateway" "main" {
@@ -18,5 +22,9 @@ resource "aws_internet_gateway" "main" {
 
   tags = {
     Name = "${var.name_prefix}-igw-${random_id.vpc_id.hex}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
