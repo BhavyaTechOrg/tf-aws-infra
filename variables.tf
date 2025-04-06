@@ -43,17 +43,6 @@ variable "application_port" {
   description = "Port on which the application runs"
 }
 
-variable "db_username" {
-  type        = string
-  description = "Database username"
-}
-
-variable "db_password" {
-  type        = string
-  description = "Database password"
-  sensitive   = true
-}
-
 variable "db_name" {
   type        = string
   description = "Database name"
@@ -84,11 +73,6 @@ variable "instance_type" {
   default     = "t2.micro"
 }
 
-# variable "key_name" {
-#   description = "EC2 key pair name"
-#   type        = string
-# }
-
 variable "iam_instance_profile_name" {
   description = "IAM instance profile name for EC2"
   type        = string
@@ -106,30 +90,3 @@ variable "domain_name" {
   type        = string
 
 }
-
-# variable "dev_subdomain" {
-#   description = "Subdomain for dev environment"
-#   type        = string
-#   default     = "dev.bhavyacloud.tech"
-# }
-
-# variable "demo_subdomain" {
-#   description = "Subdomain for demo environment"
-#   type        = string
-#   default     = "demo.bhavyacloud.tech"
-# }
-
-# variable "dev_subdomain_ns" {
-#   description = "Name server records for dev subdomain"
-#   type        = list(string)
-# }
-
-# variable "demo_subdomain_ns" {
-#   description = "Name server records for demo subdomain"
-#   type        = list(string)
-# }
-
-# variable "db_name" {
-#   description = "The name of the RDS database"
-#   type        = string
-# }

@@ -41,7 +41,6 @@ resource "aws_autoscaling_group" "webapp_asg" {
 
 
 # Scale Up Policy
-
 resource "aws_autoscaling_policy" "scale_up" {
   name                   = "scale-up-${var.environment}-${random_id.suffix.hex}"
   scaling_adjustment     = 1
@@ -52,7 +51,6 @@ resource "aws_autoscaling_policy" "scale_up" {
 
 
 # Scale Down Policy
-
 resource "aws_autoscaling_policy" "scale_down" {
   name                   = "scale-down-${var.environment}-${random_id.suffix.hex}"
   scaling_adjustment     = -1
@@ -63,7 +61,6 @@ resource "aws_autoscaling_policy" "scale_down" {
 
 
 # CloudWatch Alarm - Scale Up
-
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   alarm_name          = "cpu-high-${var.environment}-${random_id.suffix.hex}"
   comparison_operator = "GreaterThanOrEqualToThreshold"
