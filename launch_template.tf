@@ -12,71 +12,83 @@ resource "aws_launch_template" "webapp_template" {
     security_groups             = [aws_security_group.asg_app_sg.id]
   }
 
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    set -e
-    exec > /var/log/user-data.log 2>&1
+  user_data = base64encode(<<EOF
+#!/bin/bash
+set -euxo pipefail
+exec > /var/log/user-data.log 2>&1
 
-    echo "=== Starting EC2 bootstrap ==="
+echo "Starting EC2 user data script..."
 
-    apt update -y
-    apt install -y awscli jq postgresql-client
-
-    echo "Fetching credentials from Secrets Manager..."
-    SECRET_JSON=$(aws secretsmanager get-secret-value \
-      --secret-id "db/credentials" \
-      --region ${var.aws_region} \
-      --query SecretString \
-      --output text)
-
-    if [ -z "$SECRET_JSON" ]; then
-      echo "❌ Failed to fetch secret"
-      exit 1
-    fi
-
-    DB_USERNAME=$(echo "$SECRET_JSON" | jq -r .username)
-    DB_PASSWORD=$(echo "$SECRET_JSON" | jq -r .password)
-    DB_NAME=$(echo "$SECRET_JSON" | jq -r .db_name)
-
-    echo "✅ Got DB credentials: $DB_USERNAME"
-
-    cat > /etc/webapp.env <<EOL
-NODE_ENV=production
-PORT=${var.application_port}
-POSTGRESQL_HOST=${aws_db_instance.webapp_db.address}
+# Set values using Terraform interpolation
+POSTGRESQL_HOST="${aws_db_instance.webapp_db.address}"
 POSTGRESQL_PORT=5432
-POSTGRESQL_USER=$DB_USERNAME
-POSTGRESQL_PASSWORD=$DB_PASSWORD
-POSTGRESQL_DB=$DB_NAME
-DATABASE_URL=postgresql://$DB_USERNAME:$DB_PASSWORD@${aws_db_instance.webapp_db.address}:5432/$DB_NAME
-S3_BUCKET_NAME=webapp-${random_uuid.bucket_name.result}
-AWS_REGION=${var.aws_region}
+POSTGRESQL_USER="${jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]}"
+POSTGRESQL_PASSWORD="${jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]}"
+POSTGRESQL_DB="${var.db_name}"
+S3_BUCKET_NAME="${aws_s3_bucket.webapp_s3.bucket}"
+
+# Create env file with escaped variables
+cat > /tmp/webapp.env <<EOL
+POSTGRESQL_HOST=$${POSTGRESQL_HOST}
+POSTGRESQL_PORT=$${POSTGRESQL_PORT}
+POSTGRESQL_USER=$${POSTGRESQL_USER}
+POSTGRESQL_PASSWORD=$${POSTGRESQL_PASSWORD}
+POSTGRESQL_DB=$${POSTGRESQL_DB}
+S3_BUCKET_NAME=$${S3_BUCKET_NAME}
 EOL
 
-    chmod 600 /etc/webapp.env
-    chown csye6225:csye6225 /etc/webapp.env
+sudo mv /tmp/webapp.env /etc/webapp.env
+sudo chmod 600 /etc/webapp.env
+id -u csye6225 &>/dev/null && sudo chown csye6225:csye6225 /etc/webapp.env || echo "⚠️ csye6225 user not found"
 
-    echo "✅ /etc/webapp.env written"
+# Create log directory
+sudo mkdir -p /var/log/webapp
+sudo chown csye6225:csye6225 /var/log/webapp
+sudo chmod 755 /var/log/webapp
 
-    echo "🔍 Ensuring EnvironmentFile is in webapp.service"
-    if ! grep -q "EnvironmentFile=/etc/webapp.env" /etc/systemd/system/webapp.service; then
-      sed -i '/\\[Service\\]/a EnvironmentFile=/etc/webapp.env' /etc/systemd/system/webapp.service
-    fi
+# CloudWatch Agent config
+cat <<CWJSON > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/webapp/app.log",
+            "log_group_name": "/webapp/application_logs",
+            "log_stream_name": "{instance_id}"
+          },
+          {
+            "file_path": "/var/log/user-data.log",
+            "log_group_name": "/webapp/userdata_logs",
+            "log_stream_name": "{instance_id}"
+          }
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "metrics_collected": {
+      "statsd": {
+        "service_address": ":8125"
+      }
+    }
+  }
+}
+CWJSON
 
-    echo "✅ Reloading and starting webapp.service"
-    systemctl daemon-reload
-    systemctl enable webapp.service
-    systemctl restart webapp.service
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a append-config \
+  -m ec2 \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+  -s
 
-    echo "== webapp.service status =="
-    systemctl status webapp.service --no-pager
+# Restart service
+sudo systemctl daemon-reload
+sudo systemctl restart webapp.service
 
-    echo "=== Testing DB connection ==="
-    source /etc/webapp.env
-    PGPASSWORD=$DB_PASSWORD psql -h $POSTGRESQL_HOST -U $DB_USERNAME -d $DB_NAME -c "SELECT 1" || echo "❌ DB connection failed"
-
-    echo "=== EC2 bootstrap completed ==="
-  EOF
+echo "User data script completed successfully!"
+EOF
   )
 
   tag_specifications {

@@ -1,45 +1,3 @@
-# # ----------------------
-# # 1. Load Balancer Security Group
-# # ----------------------
-# resource "aws_security_group" "lb_sg" {
-#   name        = "alb-sg-${var.environment}-${random_id.suffix.hex}"
-#   description = "Allow inbound HTTP/HTTPS to ALB"
-#   vpc_id      = aws_vpc.main.id
-
-#   ingress {
-#     description = "Allow HTTP from public"
-#     from_port   = 80
-#     to_port     = 80
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-
-#   ingress {
-#     description = "Allow HTTPS from public"
-#     from_port   = 443
-#     to_port     = 443
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-
-#   egress {
-#     description = "Allow all outbound"
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-
-#   tags = {
-#     Name        = "alb-sg-${var.environment}-${random_id.suffix.hex}"
-#     Environment = var.environment
-#     CreatedBy   = "Terraform"
-#   }
-
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-# }
 
 # ----------------------
 # 2. Application Load Balancer
@@ -67,7 +25,7 @@ resource "aws_lb" "app_lb" {
 # ----------------------
 resource "aws_lb_target_group" "app_tg" {
   name        = "app-tg-${var.environment}-${random_id.suffix.hex}"
-  port        = 80
+  port        = 3000
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
   target_type = "instance"
