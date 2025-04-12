@@ -1,7 +1,7 @@
-locals {
-  db_user     = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
-  db_password = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
-}
+# locals {
+#   db_user     = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
+#   db_password = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
+# }
 
 resource "aws_launch_template" "webapp_template" {
   name_prefix   = "webapp-lt-${var.environment}-${random_pet.suffix.id}-"
@@ -34,12 +34,14 @@ set -euxo pipefail
 exec > /var/log/user-data.log 2>&1
 
 echo "Starting EC2 user data script..."
+# Get RDS password from Secrets Manager
+DB_PASSWORD_FROM_SECRET=$(aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.db_credentials.id} --query SecretString --output text)
 
 # Set values using Terraform interpolation
 POSTGRESQL_HOST="${aws_db_instance.webapp_db.address}"
 POSTGRESQL_PORT=5432
-POSTGRESQL_USER="${local.db_user}"
-POSTGRESQL_PASSWORD="${local.db_password}"
+POSTGRESQL_USER="${aws_db_instance.webapp_db.username}"
+POSTGRESQL_PASSWORD="$DB_PASSWORD_FROM_SECRET"
 POSTGRESQL_DB="${var.db_name}"
 S3_BUCKET_NAME="${aws_s3_bucket.webapp_s3.bucket}"
 

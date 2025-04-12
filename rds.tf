@@ -37,8 +37,8 @@ resource "aws_db_instance" "webapp_db" {
   engine_version         = "14"
   instance_class         = "db.t3.micro"
   db_name                = var.db_name
-  username               = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
-  password               = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
+  username               = "csye6225"
+  password               = random_password.db_password.result
   parameter_group_name   = aws_db_parameter_group.rds_param_group.name
   vpc_security_group_ids = [aws_security_group.database_security_group.id]
 
