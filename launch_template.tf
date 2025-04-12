@@ -1,8 +1,3 @@
-# locals {
-#   db_user     = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
-#   db_password = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
-# }
-
 resource "aws_launch_template" "webapp_template" {
   name_prefix   = "webapp-lt-${var.environment}-${random_pet.suffix.id}-"
   image_id      = var.custom_ami
