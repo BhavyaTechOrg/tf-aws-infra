@@ -10,6 +10,7 @@ resource "aws_autoscaling_group" "webapp_asg" {
   health_check_type         = "ELB"
   health_check_grace_period = 300
   target_group_arns         = [aws_lb_target_group.app_tg.arn]
+  wait_for_capacity_timeout = "15m"
 
   launch_template {
     id      = aws_launch_template.webapp_template.id
@@ -71,6 +72,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   statistic           = "Average"
   threshold           = 5
   alarm_description   = "Alarm when server CPU exceeds 5%"
+
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.webapp_asg.name

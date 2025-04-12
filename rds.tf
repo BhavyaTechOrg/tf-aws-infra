@@ -1,12 +1,3 @@
-# Fetch the database credentials from AWS Secrets Manager
-data "aws_secretsmanager_secret" "db_credentials" {
-  name = "db/credentials"
-}
-
-data "aws_secretsmanager_secret_version" "db_credentials_version" {
-  secret_id = data.aws_secretsmanager_secret.db_credentials.id
-}
-
 # Create an RDS Subnet Group (Ensures RDS is deployed in the correct subnets within the VPC)
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "rds-subnet-group"
@@ -46,8 +37,8 @@ resource "aws_db_instance" "webapp_db" {
   engine_version         = "14"
   instance_class         = "db.t3.micro"
   db_name                = var.db_name
-  username               = jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
-  password               = jsondecode(data.aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
+  username               = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
+  password               = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
   parameter_group_name   = aws_db_parameter_group.rds_param_group.name
   vpc_security_group_ids = [aws_security_group.database_security_group.id]
 
@@ -58,6 +49,14 @@ resource "aws_db_instance" "webapp_db" {
 
   # Ensures the RDS is placed in the correct subnets within the VPC
   db_subnet_group_name = aws_db_subnet_group.rds_subnet_group.name
+
+  # Enable storage encryption with KMS
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.rds_key.arn
+
+  # Add dependency to wait for KMS key
+  depends_on = [aws_kms_key.rds_key]
+
 
   tags = {
     Name        = "csye6225-db"

@@ -97,3 +97,52 @@ resource "aws_iam_instance_profile" "ec2_profile" {
     Environment = var.environment
   }
 }
+
+
+# Allow EC2 to access all four KMS keys
+resource "aws_iam_policy" "kms_policy" {
+  name        = "KMSAccessPolicy-${random_id.resource_suffix.hex}"
+  description = "Allow EC2 to use KMS keys for encryption/decryption"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey*",
+          "kms:ReEncrypt*",
+          "kms:CreateKey",
+          "kms:TagResource",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey*",
+          "kms:ReEncrypt*",
+          "kms:DescribeKey",
+          "kms:PutKeyPolicy"
+
+        ],
+        Resource = [
+          aws_kms_key.ec2_key.arn,
+          aws_kms_key.rds_key.arn,
+          aws_kms_key.s3_key.arn,
+          aws_kms_key.secrets_key.arn
+        ]
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "KMS Key Access-${random_id.resource_suffix.hex}"
+    Environment = var.environment
+  }
+}
+
+# Attach KMS policy to EC2 role
+resource "aws_iam_role_policy_attachment" "kms_policy_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.kms_policy.arn
+}
