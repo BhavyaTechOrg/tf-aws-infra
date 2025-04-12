@@ -16,16 +16,6 @@ resource "random_password" "db_password" {
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
-
-# Store the database credentials in Secrets Manager
-# resource "aws_secretsmanager_secret_version" "db_credentials_version" {
-#   secret_id = aws_secretsmanager_secret.db_credentials.id
-#   secret_string = jsonencode({
-#     username = "csye6255"
-#     password = random_password.db_password.result
-#   })
-# }
-
 resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   secret_id     = aws_secretsmanager_secret.db_credentials.id
   secret_string = random_password.db_password.result
