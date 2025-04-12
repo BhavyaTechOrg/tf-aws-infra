@@ -10,7 +10,7 @@ variable "aws_profile" {
 
 variable "environment" {
   type        = string
-  description = "Environment tag (e.g., dev, prod)"
+  description = "Environment tag (e.g., dev, prod, demo)"
 }
 
 variable "vpc_cidr" {
@@ -66,7 +66,6 @@ variable "desired_capacity" {
   default     = 3
 }
 
-
 variable "instance_type" {
   description = "Instance type"
   type        = string
@@ -78,7 +77,6 @@ variable "iam_instance_profile_name" {
   type        = string
 }
 
-
 variable "ssh_allowed_ip" {
   description = "CIDR block allowed for SSH access"
   type        = string
@@ -86,7 +84,17 @@ variable "ssh_allowed_ip" {
 }
 
 variable "domain_name" {
-  description = "Your root domain name"
+  description = "Your root domain name (e.g., dev.bhavyacloud.tech or demo.bhavyacloud.tech)"
   type        = string
+}
 
+variable "imported_cert_arn" {
+  description = "ARN of the imported SSL certificate for demo environment"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.environment != "demo" || var.imported_cert_arn != ""
+    error_message = "You must provide a non-empty value for imported_cert_arn when environment is set to 'demo'."
+  }
 }
